@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lab1", "Lab1\Lab1.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NumberBaseLibs", "Lab1Libs\NumberBaseLibs.csproj", "{39E7E9D4-4018-4182-9E60-B5E8C8FCE185}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lab2", "lab_2\Lab2.csproj", "{71904FDB-44B9-4D67-A4B8-149034E63177}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lab2", "Lab2\Lab2.csproj", "{71904FDB-44B9-4D67-A4B8-149034E63177}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CalculateLibs", "CalculateLibs\CalculateLibs.csproj", "{D246F052-0763-4986-BD7B-3DCF0FB600C0}"
 EndProject
