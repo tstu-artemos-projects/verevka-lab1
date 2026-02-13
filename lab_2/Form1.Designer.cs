@@ -1,6 +1,6 @@
 ﻿namespace Lab_2
 {
-    partial class Calculator_form
+    partial class CalculatorForm
     {
         /// <summary>
         ///  Required designer variable.
