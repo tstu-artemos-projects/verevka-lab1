@@ -1,4 +1,5 @@
 <div align="center">
+   
 # Лабораторные работы по "Основам программирования"
 
 ![GitHub License](https://img.shields.io/github/license/tstu-artemos-projects/BaseOfProgLabs?style=for-the-badge&logo=gplv3&logoColor=FFFFFF)
