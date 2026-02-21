@@ -39,7 +39,7 @@
 
 1. Клонируйте успех: 🖇️
    ```pwsh
-   git cmone https://github.com/tstu-artemos-projects/BaseOfProgLabs.git
+   git clone https://github.com/tstu-artemos-projects/BaseOfProgLabs.git
    ```
 2. Зайдите внутрь: 🚶‍♂️
    ```pwsh
