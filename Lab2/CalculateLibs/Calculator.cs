@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Lab2.CalculateLibrary;
+namespace Lab2.CalculateLibs;
     
 // От артемоса: некоторые методы сделал приватными, ибо в других местах они не нужны
 /// <summary>

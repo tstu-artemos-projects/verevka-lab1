@@ -1,4 +1,4 @@
-using NumberBaseLibs;
+using Lab1.NumberBaseLibs;
 using System.ComponentModel; // ��� Convertation, ������� �� ����� ������������ ��� ����������� ����� �� ����� ������� ��������� � ������
 
 namespace Lab1.UI
