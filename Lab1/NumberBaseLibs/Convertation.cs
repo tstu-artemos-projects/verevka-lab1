@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace NumberBaseLibs
+namespace Lab1.NumberBaseLibs
 {
     // От Артёма Клочкова: чутка превожу к действительности, так как в C# числа, которые мы видим, не являются символами, а типами данных, а также хранятся в памяти в двоичном виде.
     public class Convertation

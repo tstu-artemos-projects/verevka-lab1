@@ -1,7 +1,8 @@
 using CalculateLibrary;
 using CalculateLibs;
+using Lab2.CalculateLibs;
 
-namespace Lab2
+namespace Lab2.UI
 {
     public partial class CalculatorForm : Form
     {

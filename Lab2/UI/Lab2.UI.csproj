@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CalculateLibs\CalculateLibs.csproj" />
+    <ProjectReference Include="..\CalculateLibs\Lab2.CalculateLibs.csproj" />
   </ItemGroup>
 
   <ItemGroup>

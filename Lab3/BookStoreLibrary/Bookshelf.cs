@@ -1,7 +1,4 @@
-﻿using BookStoreLibrary;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Lab3.BookStoreLibrary;
 
 /// <summary>
 /// Класс, представляющий книжную полку
