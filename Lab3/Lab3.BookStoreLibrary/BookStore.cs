@@ -36,6 +36,20 @@ public class BookStore
         _shelves.Add(shelf);
     }
 
+    /// <summary>
+    /// Метод удаления полки в магазин
+    /// </summary>
+    /// <param name="shelf">Полка для добавления</param>
+    /// <returns>true, если удалено успешно, иначе - false</returns>
+    public bool RemoveShelf(Bookshelf shelf)
+    {
+        // Проверка на превышение максимального количества полок
+        //if (_shelves.Count >= MaxShelves)
+        //    throw new InvalidOperationException($"Невозможно добавить полку жанра {shelf.Genre}. Максимальное количество полок в магазине достигнуто.");
+
+        return _shelves.Remove(shelf);
+    }
+
     ///// <summary>
     ///// Метод получения всех полок магазина
     ///// </summary>
