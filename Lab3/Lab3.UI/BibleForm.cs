@@ -1,3 +1,5 @@
+using Lab3.BookStoreLibrary;
+
 namespace Lab3.UI;
 
 public partial class BibleForm : Form
@@ -11,19 +13,52 @@ public partial class BibleForm : Form
     /// <returns>Массив строк из файла</returns>
     public static string[] ReadBase(string fileName)
     {
-        StreamReader f = new(fileName);
-        string s = f.ReadToEnd();
-        string[] buf = s.Split("\n");
-        return buf;
+        if (!File.Exists(fileName))
+            return Array.Empty<string>();
+        return File.ReadAllLines(fileName);
     }
 
-    public readonly string[] RandomGenreBase = ReadBase("Genre.txt");
-    public readonly string[] RandomAuthorBase = ReadBase("Authors.txt");
-    public readonly string[] RandomBookNameBase = ReadBase("BookName.txt");
+    private readonly BookStore _store;
+    private const int MAX_SHELVES = 5;
+    private const int MAX_BOOKS_IN_SHELVES = 5;
+
+    public readonly string[] RandomGenreBase;
+    public readonly string[] RandomAuthorBase;
+    public readonly string[] RandomBookNameBase;
+
+    private void buttonGenerate_Click(object sender, EventArgs e)
+    {
+        if (RandomGenreBase.Length == 0 || RandomAuthorBase.Length == 0 || RandomBookNameBase.Length == 0) return;
+
+        var randomBook = Book.GenerateRandomBook(RandomBookNameBase, RandomAuthorBase, RandomGenreBase);
+
+        textBoxTitleBook.Text = randomBook.Title;
+        textBoxAutor.Text = randomBook.Author;
+        comboBoxType.SelectedItem = randomBook.Genre;
+
+        numericUpDownPages.Value = Math.Clamp(randomBook.PageCount, numericUpDownPages.Minimum, numericUpDownPages.Maximum);
+        numericUpDownPrice.Value = Math.Clamp(randomBook.Price, numericUpDownPrice.Minimum, numericUpDownPrice.Maximum);
+    }
 
     public BibleForm()
     {
+        try {
+            RandomGenreBase = ReadBase("Genre.txt");
+            RandomAuthorBase = ReadBase("Authors.txt");
+            RandomBookNameBase = ReadBase("BookName.txt");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Ошибка при загрузке данных: {ex.Message}", "Ошибка загрузки", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            RandomGenreBase = Array.Empty<string>();
+            RandomAuthorBase = Array.Empty<string>();
+            RandomBookNameBase = Array.Empty<string>();
+        }
+        _store = new BookStore(MAX_SHELVES);
+
         InitializeComponent();
+
+        comboBoxType.Items.AddRange(RandomGenreBase);
     }
 
     private void btnNewBook_Click(object sender, EventArgs e)
@@ -67,23 +102,86 @@ public partial class BibleForm : Form
         numericUpDownPages.Value = numericUpDownPages.Minimum;
         numericUpDownPrice.Value = numericUpDownPrice.Minimum; // очистка цены и страниц
 
-        labelIDforUsing.Text = "(будет назначен автоматически)"; // обнуление label с ID
+        //labelIDforUsing.Text = "(будет назначен автоматически)"; // обнуление label с ID
 
         textBoxTitleBook.Focus(); // для удобства переводим фокус на первое поле
     }
 
-    private void btnAddNewBook_Click(object sender, EventArgs e)
+    private Bookshelf GetOrCreateShelf(string genre)
     {
-        try
+        // Ищем существующий шкаф этого жанра
+        var shelf = _store.Shelves.FirstOrDefault(s => s.Genre == genre);
+        if (shelf != null) return shelf;
+
+        // Если шкафа нет, пытаемся добавить новый
+        if (_store.Shelves.Count < _store.MaxShelves)
         {
-            ValidateInput(); // проверка валидации
-            // Тут логика добавления...
+            var newShelf = new Bookshelf(genre, 10); // Вместимость 10 книг
+            _store.AddShelf(newShelf);
+            return newShelf;
         }
-        catch (Exception ex)
+
+        // Если лимит шкафов исчерпан, ищем пустой шкаф для переназначения
+        var emptyShelf = _store.Shelves.FirstOrDefault(s => s.CurrentCount == 0);
+        if (emptyShelf != null)
         {
-            ShowError(ex);
+            _store.RemoveShelf(emptyShelf);
+            MessageBox.Show($"Лимит жанров исчерпан. Пустой шкаф переназначен под жанр {genre}");
+
+            var replacedShelf = new Bookshelf(genre, MAX_BOOKS_IN_SHELVES);
+            _store.AddShelf(replacedShelf);
+            return replacedShelf;
         }
+
+        throw new InvalidOperationException("Достигнут лимит шкафов. Распродайте один из них.");
     }
+
+    private void ValidateInputForAdding()
+    {
+        if (string.IsNullOrWhiteSpace(textBoxTitleBook.Text))
+            throw new ArgumentException("Название книги не может быть пустым", "Название");
+        if (string.IsNullOrWhiteSpace(textBoxAutor.Text))
+            throw new ArgumentException("Автор не указан", "Автор");
+        if (comboBoxType.SelectedIndex == -1 && string.IsNullOrWhiteSpace(comboBoxType.Text))
+            throw new ArgumentException("Выберите или введите жанр", "Жанр");
+    }
+
+
+    private string GetUniqueTitle(string baseTitle)
+    {
+        string currentTitle = baseTitle;
+        int counter = 2;
+
+        // Проверяем все книги во всех шкафах магазина
+        while (_store.Shelves.Any(s => s.Books.Any(b => b.Title.Equals(currentTitle, StringComparison.OrdinalIgnoreCase))))
+        {
+            currentTitle = $"{baseTitle} {counter}";
+            counter++;
+        }
+        return currentTitle;
+    }
+
+    private void buttonSearch2_Click(object sender, EventArgs e)
+    {
+        if (!Guid.TryParse(textBoxSearchID.Text, out Guid id))
+        {
+            MessageBox.Show("Введите корректный GUID идентификатор.");
+            return;
+        }
+
+        foreach (var shelf in _store.Shelves)
+        {
+            try
+            {
+                var book = shelf.FindBookById(id);
+                ShowBookDetails(book);
+                return;
+            }
+            catch { continue; }
+        }
+        MessageBox.Show("Книга не найдена.");
+    }
+
 
     private void ShowError(Exception ex)
     {
@@ -101,6 +199,16 @@ public partial class BibleForm : Form
                 title = "Ошибка формата";
                 break;
 
+            case InvalidDataException:
+                message = $"Ошибка данных: {ex.Message}";
+                title = "Ошибка данных";
+                break;
+
+            case InvalidOperationException:
+                message = $"Ошибка при исполнении: {ex.Message}";
+                title = "Ошибка доступа";
+                break;
+
             default:
                 message = $"Непредвиденная ошибка: {ex.Message}";
                 title = "Критическая ошибка";
@@ -110,87 +218,166 @@ public partial class BibleForm : Form
         MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 
-    private void ValidateInput()
+    private void UpdateMarketUI()
     {
-        // Проверка названия для поиска
-        if (string.IsNullOrWhiteSpace(textBoxSearchTitle.Text))
-            throw new ArgumentException("Поле 'Поиск по названию' не может быть пустым", "SearchTitle");
+        // Обновляем баланс
+        labelBalanceUsed.Text = $"{_store.Balance} руб.";
 
-        // Проверка ID (должно быть числом)
-        if (!int.TryParse(textBoxSearchID.Text, out int id) || id <= 0)
-            throw new ArgumentException("ID должен быть положительным целым числом", "SearchID");
+        // Обновляем список доступных жанров (шкафов) в магазине
+        var currentGenre = comboBoxJanr.SelectedItem?.ToString();
+        comboBoxJanr.Items.Clear();
+        foreach (var shelf in _store.Shelves)
+        {
+            comboBoxJanr.Items.Add(shelf.Genre);
+        }
 
-        // Проверка названия книги
-        if (string.IsNullOrWhiteSpace(textBoxTitleBook.Text))
-            throw new ArgumentException("Название книги обязательно для заполнения", "TitleBook");
+        if (currentGenre != null && comboBoxJanr.Items.Contains(currentGenre))
+            comboBoxJanr.SelectedItem = currentGenre;
 
-        // Проверка автора
-        if (string.IsNullOrWhiteSpace(textBoxAutor.Text))
-            throw new ArgumentException("Укажите автора книги", "Author");
-
-        // Проверка количества страниц
-        if (numericUpDownPages.Value <= 0)
-            throw new ArgumentException("Количество страниц должно быть больше 0", "Pages");
+        RefreshBookList();
     }
 
-    private void buttonReturn1_Click(object sender, EventArgs e) => tabControlNewBook.SelectedTab = tabPageMain;
-    private void buttonReturn2_Click(object sender, EventArgs e) => tabControlNewBook.SelectedTab = tabPageMain;
-    private void buttonReturn3_Click(object sender, EventArgs e) => tabControlNewBook.SelectedTab = tabPageMain;
-
-    private void buttonSearch1_Click(object sender, EventArgs e)
+    private void RefreshBookList()
     {
-        try
+        listViewBooks.Items.Clear();
+        string selectedGenre = comboBoxJanr.SelectedItem?.ToString();
+        if (string.IsNullOrEmpty(selectedGenre)) return;
+
+        var shelf = _store.Shelves.FirstOrDefault(s => s.Genre == selectedGenre);
+        if (shelf == null) return;
+
+        foreach (var book in shelf.Books)
         {
-            ValidateInput();
+            var item = new ListViewItem(book.Title);
+            item.Tag = book; // Сохраняем ссылку на объект книги
+            listViewBooks.Items.Add(item);
         }
-        catch (Exception ex)
-        {
-            ShowError(ex);
-        }
-    }
-
-    private void listViewBooks_SelectedIndexChanged(object sender, EventArgs e)
-    {
-        // Если в списке выбрана хотя бы одна книга
-        if (listViewBooks.SelectedItems.Count > 0)
-        {
-            groupBoxSearch.Visible = false;
-            groupBoxDetails.Visible = true;
-
-            // Пример получения данных (логика заглушки)
-            var title = listViewBooks.SelectedItems[0].Text;
-            var author = "Автор книги";
-            var price = 500;
-
-            labelInfo.Text = $"Книга: {title}\nАвтор: {author}\nЦена: {price} руб.";
-
-            // Устанавливаем детали на то же место, где был поиск
-            groupBoxDetails.Location = groupBoxSearch.Location;
-            groupBoxDetails.Size = groupBoxSearch.Size;
-        }
-        else
-        {
-            groupBoxSearch.Visible = true;
-            groupBoxDetails.Visible = false;
-        }
-    }
-
-    private void btnBackToSearch_Click(object sender, EventArgs e)
-    {
-        listViewBooks.SelectedIndices.Clear(); // Снимаем выделение, чтобы вернуться к поиску
     }
 
     private void btnSell_Click(object sender, EventArgs e)
     {
         if (listViewBooks.SelectedItems.Count > 0)
         {
-            var selectedItem = listViewBooks.SelectedItems[0];
-            listViewBooks.Items.Remove(selectedItem); // удаление книги из списка
+            Book selectedBook = (Book)listViewBooks.SelectedItems[0].Tag;
 
+            _store.ProcessSale(selectedBook);
+
+            MessageBox.Show($"Книга '{selectedBook.Title}' продана!", "Продажа");
+
+            UpdateMarketUI();
             groupBoxDetails.Visible = false;
             groupBoxSearch.Visible = true;
-
-            MessageBox.Show("Книга успешно продана!", "Продажа");
         }
     }
+
+
+    private void comboBoxJanr_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        RefreshBookList();
+    }
+
+
+
+    private void btnAddNewBook_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            ValidateInputForAdding();
+
+            string title = textBoxTitleBook.Text.Trim();
+            string author = textBoxAutor.Text.Trim();
+            string genre = comboBoxType.Text.Trim();
+            int pages = (int)numericUpDownPages.Value;
+            decimal price = numericUpDownPrice.Value;
+
+            title = GetUniqueTitle(title);
+
+            Bookshelf shelf = GetOrCreateShelf(genre);
+
+            Book newBook = new Book(title, author, genre, pages, price);
+            shelf.AddBook(newBook);
+
+            labelIDforUsing.Text = newBook.Id.ToString();
+            UpdateMarketUI();
+            MessageBox.Show($"Книга '{title}' успешно добавлена!", "Успех");
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex);
+        }
+
+    }
+
+    private void buttonReturn1_Click(object sender, EventArgs e) => tabControlNewBook.SelectedTab = tabPageMain;
+    private void buttonReturn2_Click(object sender, EventArgs e) => tabControlNewBook.SelectedTab = tabPageMain;
+    private void buttonReturn3_Click(object sender, EventArgs e) => tabControlNewBook.SelectedTab = tabPageMain;
+
+    private void listViewBooks_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (listViewBooks.SelectedItems.Count > 0)
+        {
+            ShowBookDetails((Book)listViewBooks.SelectedItems[0].Tag);
+        }
+    }
+
+    private void ShowBookDetails(Book book)
+    {
+        groupBoxSearch.Visible = false;
+        groupBoxDetails.Visible = true;
+        groupBoxDetails.Location = groupBoxSearch.Location;
+
+        labelInfo.Text = $"Название: {book.Title}\n" +
+                         $"Автор: {book.Author}\n" +
+                         $"Цена: {book.Price} руб. " +
+                         $"Страниц: {book.PageCount}\n" +
+                         $"ID: {book.Id.ToString()}";
+
+        btnSell.Tag = book;
+    }
+
+
+
+    private void btnBackToSearch_Click(object sender, EventArgs e)
+    {
+        groupBoxSearch.Visible = true;
+        groupBoxDetails.Visible = false;
+        listViewBooks.SelectedIndices.Clear(); // Снимаем выделение, чтобы вернуться к поиску
+    }
+
+    private void buttonSearch1_Click(object sender, EventArgs e)
+    {
+        string searchText = textBoxSearchTitle.Text.Trim();
+        if (string.IsNullOrEmpty(searchText)) return;
+
+        foreach (var shelf in _store.Shelves)
+        {
+            try
+            {
+                var book = shelf.FindBookByTitle(searchText);
+                ShowBookDetails(book);
+                return;
+            }
+            catch { continue; }
+        }
+        MessageBox.Show("Книга не найдена.");
+    }
+
+    private void buttonSale_Click(object sender, EventArgs e)
+    {
+        string selectedGenre = comboBoxJanr.SelectedItem?.ToString();
+        if (string.IsNullOrEmpty(selectedGenre)) return;
+
+        var shelf = _store.Shelves.FirstOrDefault(s => s.Genre == selectedGenre);
+        if (shelf != null)
+        {
+            var booksToSell = shelf.Books.ToList();
+            foreach (var book in booksToSell)
+            {
+                _store.ProcessSale(book);
+            }
+            MessageBox.Show($"Все книги из шкафа '{selectedGenre}' проданы.");
+            UpdateMarketUI();
+        }
+    }
+
 }

@@ -237,8 +237,9 @@ partial class BibleForm
         buttonGenerate.Name = "buttonGenerate";
         buttonGenerate.Size = new Size(234, 27);
         buttonGenerate.TabIndex = 14;
-        buttonGenerate.Text = "Сгенерировать рандомные данные \r\n";
+        buttonGenerate.Text = "Сгенерировать рандомные данные";
         buttonGenerate.UseVisualStyleBackColor = true;
+        buttonGenerate.Click += buttonGenerate_Click;
         // 
         // btnAddNewBook
         // 
@@ -376,6 +377,7 @@ partial class BibleForm
         tabPageMarket.Controls.Add(listViewBooks);
         tabPageMarket.Controls.Add(groupBoxChose);
         tabPageMarket.Controls.Add(buttonReturn2);
+        tabPageMarket.Controls.Add(groupBoxDetails);
         tabPageMarket.Controls.Add(labelMarket);
         tabPageMarket.Location = new Point(4, 27);
         tabPageMarket.Name = "tabPageMarket";
@@ -384,8 +386,7 @@ partial class BibleForm
         tabPageMarket.Text = "Магазин";
         // 
         // groupBoxSearch
-        // 
-        groupBoxSearch.Controls.Add(groupBoxDetails);
+        //
         groupBoxSearch.Controls.Add(textBoxSearchID);
         groupBoxSearch.Controls.Add(buttonSearch2);
         groupBoxSearch.Controls.Add(label2);
@@ -406,7 +407,7 @@ partial class BibleForm
         groupBoxDetails.Controls.Add(labelInfo);
         groupBoxDetails.Location = new Point(0, 0);
         groupBoxDetails.Name = "groupBoxDetails";
-        groupBoxDetails.Size = new Size(422, 78);
+        groupBoxDetails.Size = new Size(422, 96);
         groupBoxDetails.TabIndex = 21;
         groupBoxDetails.TabStop = false;
         groupBoxDetails.Text = "Панель информации о книге";
@@ -525,6 +526,7 @@ partial class BibleForm
         buttonSale.TabIndex = 16;
         buttonSale.Text = "Распродать шкаф";
         buttonSale.UseVisualStyleBackColor = true;
+        buttonSale.Click += buttonSale_Click;
         // 
         // labelJanr
         // 
@@ -542,6 +544,7 @@ partial class BibleForm
         comboBoxJanr.Name = "comboBoxJanr";
         comboBoxJanr.Size = new Size(127, 23);
         comboBoxJanr.TabIndex = 2;
+        comboBoxJanr.SelectedIndexChanged += comboBoxJanr_SelectedIndexChanged;
         // 
         // labelBalance
         // 
