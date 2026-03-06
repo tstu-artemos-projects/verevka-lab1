@@ -1,6 +1,4 @@
-﻿using static System.Net.WebRequestMethods;
-
-namespace Lab3.BookStoreLibrary;
+﻿namespace Lab3.BookStoreLibrary;
 
 /// <summary>
 /// Класс, представляющий книжную полку
