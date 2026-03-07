@@ -11,6 +11,22 @@ public class BookshelfTest
         Assert.Equal(3, shelf.Capacity);
     }
 
+    [Fact]
+    public void FindBookById_ThrowsInvalidDataException_WhenWrongId()
+    {
+        var shelf = new Bookshelf("Детектив", 5);
+
+        Assert.Throws<InvalidDataException>(() => shelf.FindBookById(new Guid()));
+    }
+    
+    [Fact]
+    public void FindBookByName_ThrowsInvalidDataException_WhenWrongName()
+    {
+        var shelf = new Bookshelf("Детектив", 5);
+
+        Assert.Throws<InvalidDataException>(() => shelf.FindBookByTitle("sdfsadg"));
+    }
+
     //Проверяем, что книга правильного жанра успешно добавляется и счётчик увеличивается
     [Fact]
     public void AddBook_CorrectGenre_IncreasesCount()
