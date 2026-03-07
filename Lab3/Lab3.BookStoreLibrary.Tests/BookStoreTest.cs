@@ -15,6 +15,17 @@ namespace Lab3StoreLibraryTests
             Assert.Equal("Фантастика", store.Shelves.First().Genre);
         }
 
+        [Fact]
+        public void RemoveShelf_WhenValid_ShouldRemoveShelf()
+        {
+            var store = new BookStore(5);
+            var shelf = new Bookshelf("Фантастика", 10); // Исправлено: указан capacity
+
+            store.AddShelf(shelf);
+
+            Assert.True(store.RemoveShelf(shelf));
+        }
+
         //Попытка добавить больше полок, чем разрешено — выбрасывает исключение
         [Fact]
         public void AddShelf_WhenMaxShelvesReached_ShouldThrowException()
